@@ -55,9 +55,13 @@ async function buscarCapitaisAleatorias() {
 }
 
 function criarAlternativas(capitalCorreta, listaOutrasCapitais) { 
-  const capitaisErradas = listaOutrasCapitais
-    .filter(capital => capital !== capitalCorreta)
-    .slice(0, 3);
+  
+  const capitaisUnicas = [...new Set(listaOutrasCapitais)]
+    .filter(capital => capital !== capitalCorreta);
+  
+  const capitaisEmbaralhadas = capitaisUnicas.sort(() => Math.random() - 0.5);
+
+  const capitaisErradas = capitaisEmbaralhadas.slice(0, 3);
 
   const alternativas = [
     { texto: capitalCorreta, correta: true },
