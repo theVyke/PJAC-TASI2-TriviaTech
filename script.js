@@ -77,15 +77,13 @@ function criarAlternativas(capitalCorreta, listaOutrasCapitais) {
 async function criarPergunta() {
   try {
 
-    const nomePaisBuscado = "Brazil";
-
     const [paisAlvo, capitaisAleatorias] = await Promise.all([
-      buscarPaisAlvo(nomePaisBuscado),
+      buscarPaisAlvo(),
       buscarCapitaisAleatorias()
     ]);
 
-    const capitalCorreta = paisAlvo[0].capitals?.[0]?.name;
-    const nomePaisExibicao = paisAlvo[0].names?.common || nomePaisBuscado;
+    const capitalCorreta = paisAlvo.capitals[0].name;
+    const nomePaisExibicao = paisAlvo.names?.common;
 
 
     const alternativas = criarAlternativas(
