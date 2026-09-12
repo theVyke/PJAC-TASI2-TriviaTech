@@ -10,11 +10,27 @@ const api = axios.create({
 });
 
 // Função para buscar informações de um país pelo nome
-async function buscarPaisAlvo(nomePais) {
-  const resposta = await api.get(`/names.common/${nomePais}`, {
-    params: { response_fields: "names.common,capitals"}
+async function buscarPaisAlvo() {
+  const tamanhoAmostra = 10;
+  const totalPaises = 250;
+  const offsetAleatorio = Math.floor(Math.random() * (totalPaises - tamanhoAmostra));
+
+  const resposta = await api.get("", {
+    params: { 
+      limit: tamanhoAmostra,
+      offset: offsetAleatorio,
+      response_fields: "names.common,capitals"}
     });
-  return resposta.data.data.objects;
+
+  const listaPaises = resposta.data.data.objects || [];
+
+  const paisesComCapital = listaPaises.filter(
+    pais => pais.capitals && pais.capitals.length > 0 && pais.capitals[0]?.name
+  );
+
+  const indiceSorteado = Math.floor(Math.random() * paisesComCapital.length);
+  
+  return paisesComCapital[indiceSorteado];
 }
 
 // Função para buscar informações de um país aleatório (irá comport as opções erradas)
