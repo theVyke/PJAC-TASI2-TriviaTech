@@ -35,10 +35,19 @@ async function buscarPaisAlvo() {
 
 // Função para buscar informações de um país aleatório (irá comport as opções erradas)
 async function buscarCapitaisAleatorias() {
-  const resposta = await api.get(``,{
-    params: { limit: 10, response_fields: "capitals"}
+
+  const limite = 70; 
+  const totalPaises = 250;
+  const offsetAleatorio = Math.floor(Math.random() * (totalPaises - limite));
+
+  const resposta = await api.get("",{
+    params: { 
+      limit: limite, 
+      offset: offsetAleatorio,
+      response_fields: "capitals"}
     });
-  const todasCapitais = resposta.data.data.objects 
+
+  const todasCapitais = (resposta.data.data.objects || [])
     .map(pais => pais.capitals ? pais.capitals[0]?.name : null)
     .filter(capital => capital !== null && capital !== undefined);
   
