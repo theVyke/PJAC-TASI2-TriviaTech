@@ -1,23 +1,419 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-bs-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TriviaTechMatheus</title>
+  <title>TriviaTech - Jogador vs A.P.I.</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <main class="card">
-    <p class="card__label">Pergunta 1 de 1</p>
-    <h1 class="card__question" id="quiz-question">Carregando pergunta...</h1>
+<body class="bg-body-tertiary">
 
-    <div class="card__options" id="quiz-options">
-      <!-- <button class="option" data-correct="false">Bootstrap</button>
-      <button class="option" data-correct="false">Tailwind</button>
-      <button class="option" data-correct="true">Axios</button>
-      <button class="option" data-correct="false">Bulma</button> -->
+  <!-- ======================================================================
+       NAVBAR SUPERIOR
+       ====================================================================== -->
+  <nav class="navbar navbar-expand-lg border-bottom border-body-secondary bg-body px-3 py-2 sticky-top">
+    <div class="container-lg">
+      <a class="navbar-brand d-flex align-items-center fw-bold fs-4 text-primary" href="#">
+        <i class="bi bi-cpu-fill text-info me-2 fs-3"></i>
+        <span>Trivia<span class="text-body-emphasis">Tech</span></span>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2 fs-6">v1.0</span>
+      </a>
+
+      <div class="d-flex align-items-center gap-2">
+        <!-- Botão Regras -->
+        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalRegras" title="Regras do Jogo">
+          <i class="bi bi-question-circle me-1"></i>
+          <span class="d-none d-sm-inline">Regras</span>
+        </button>
+
+        <!-- Botão Ranking -->
+        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center" id="btn-open-ranking" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRanking" title="Histórico e Recordes">
+          <i class="bi bi-trophy-fill text-warning me-1"></i>
+          <span class="d-none d-sm-inline">Ranking</span>
+        </button>
+
+        <!-- Botão Alternador de Tema -->
+        <button class="btn btn-outline-secondary btn-sm" id="theme-toggle-btn" title="Alternar Tema Claro/Escuro" aria-label="Alternar Tema">
+          <i class="bi bi-sun-fill text-warning" id="theme-toggle-icon"></i>
+        </button>
+      </div>
     </div>
+  </nav>
+
+  <!-- ======================================================================
+       CONTAINER PRINCIPAL DAS TELAS (SPA)
+       ====================================================================== -->
+  <main class="container-lg py-4 flex-grow-1 d-flex flex-column justify-content-center">
+
+    <!-- --------------------------------------------------------------------
+         VISÃO 1: LOBBY (CONFIGURAÇÃO DO DESAFIO)
+         -------------------------------------------------------------------- -->
+    <section id="view-lobby" class="row justify-content-center">
+      <div class="col-12 col-md-10 col-lg-8">
+        
+        <!-- Hero Card -->
+        <div class="card card-battle shadow-lg border-0 bg-body p-4 p-md-5 mb-4 text-center">
+          <div class="mb-3">
+            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-3 py-2 rounded-pill fs-6">
+              <i class="bi bi-shield-shaded me-1"></i> Desafio de Conhecimento em Tempo Real
+            </span>
+          </div>
+
+          <h1 class="display-5 fw-bold text-body-emphasis mb-3">
+            Desafie a <span class="text-danger">A.P.I.</span>
+          </h1>
+          <p class="lead text-body-secondary mb-4 mx-auto" style="max-width: 600px;">
+            A inteligência da API está processando dados globais. Responda corretamente para causar dano ao sistema antes que sua própria energia acabe!
+          </p>
+
+          <!-- Card do Boss Atual -->
+          <div class="card border border-danger-subtle bg-danger-subtle bg-opacity-10 p-3 mb-4 rounded-4 text-start">
+            <div class="d-flex align-items-center gap-3">
+              <div class="boss-avatar-wrapper flex-shrink-0">
+                <i class="bi bi-robot fs-1 text-danger"></i>
+              </div>
+              <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
+                  <h5 class="fw-bold mb-0 text-danger">Boss Atual: A.P.I. Geocore</h5>
+                  <span class="badge bg-danger text-white"><i class="bi bi-broadcast me-1"></i>Online</span>
+                </div>
+                <p class="mb-0 text-body-secondary small mt-1">
+                  Fonte: <strong>Rest Countries V5</strong> • Especialidade: <em>Capitais & Geografia do Planeta</em>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulário de Configurações -->
+          <form id="form-lobby" class="text-start">
+            <div class="row g-3 mb-4">
+              <div class="col-12 col-md-6">
+                <label for="input-player-name" class="form-label fw-semibold">
+                  <i class="bi bi-person-fill text-primary me-1"></i> Seu Apelido de Desafiante
+                </label>
+                <input type="text" class="form-control form-control-lg bg-body-tertiary" id="input-player-name" placeholder="Ex: DevExplorer" maxlength="15" value="Desafiante" required />
+              </div>
+
+              <div class="col-6 col-md-3">
+                <label for="select-rounds" class="form-label fw-semibold">
+                  <i class="bi bi-hash text-info me-1"></i> Rodadas
+                </label>
+                <select class="form-select form-select-lg bg-body-tertiary" id="select-rounds">
+                  <option value="5">5 Rodadas</option>
+                  <option value="10" selected>10 Rodadas</option>
+                  <option value="15">15 Rodadas</option>
+                </select>
+              </div>
+
+              <div class="col-6 col-md-3">
+                <label for="select-timer" class="form-label fw-semibold">
+                  <i class="bi bi-stopwatch text-warning me-1"></i> Tempo / Turno
+                </label>
+                <select class="form-select form-select-lg bg-body-tertiary" id="select-timer">
+                  <option value="15" selected>15s (Padrão)</option>
+                  <option value="30">30s (Tranquilo)</option>
+                  <option value="0">Sem Limite</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow d-flex align-items-center justify-content-center gap-2 fs-5" id="btn-start-game">
+              <i class="bi bi-play-circle-fill fs-4"></i> Iniciar Desafio
+            </button>
+          </form>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------
+         VISÃO 2: ARENA DE DUELO (QUIZ & HUD)
+         -------------------------------------------------------------------- -->
+    <section id="view-arena" class="row justify-content-center d-none">
+      <div class="col-12 col-lg-10">
+
+        <!-- HUD Superior: Jogador vs API -->
+        <div class="card card-battle border-0 shadow bg-body p-3 p-md-4 mb-4">
+          <div class="row align-items-center g-3">
+            
+            <!-- Lado Esquerdo: Jogador -->
+            <div class="col-12 col-md-5">
+              <div class="d-flex align-items-center gap-3">
+                <div class="player-avatar-wrapper hud-avatar flex-shrink-0">
+                  <i class="bi bi-person-fill text-primary fs-2"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-bold text-body-emphasis" id="hud-player-name">Jogador</span>
+                    <span class="badge bg-success-subtle text-success fw-bold" id="hud-player-hp-text">100 HP</span>
+                  </div>
+                  <div class="progress shadow-sm mb-2" role="progressbar" aria-label="HP do Jogador">
+                    <div class="progress-bar bg-success" id="hud-player-hp" style="width: 100%"></div>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                      <i class="bi bi-star-fill text-warning me-1"></i><span id="hud-score-value">0</span> pts
+                    </span>
+                    <span class="badge bg-warning text-dark d-none" id="hud-streak-badge">
+                      <i class="bi bi-fire me-1"></i>Combo 1x
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Centro: Versus, Rodada e Tempo -->
+            <div class="col-12 col-md-2 text-center border-start border-end border-body-secondary py-2 py-md-0">
+              <span class="badge bg-secondary-subtle text-body border px-2 py-1 mb-2 d-inline-block small" id="hud-round-badge">
+                Rodada 1 de 10
+              </span>
+              <div class="fs-4 fw-black text-body-secondary mb-2">VS</div>
+              <div>
+                <span class="badge bg-primary fs-6 shadow-sm" id="hud-timer-badge">
+                  <i class="bi bi-stopwatch me-1"></i>15s
+                </span>
+              </div>
+            </div>
+
+            <!-- Lado Direito: A.P.I. Core -->
+            <div class="col-12 col-md-5">
+              <div class="d-flex align-items-center gap-3 flex-row-reverse text-end">
+                <div class="boss-avatar-wrapper hud-avatar flex-shrink-0">
+                  <i class="bi bi-robot text-danger fs-2"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-center mb-1 flex-row-reverse">
+                    <span class="fw-bold text-danger">A.P.I. Geocore</span>
+                    <span class="badge bg-danger-subtle text-danger fw-bold" id="hud-api-hp-text">100 HP</span>
+                  </div>
+                  <div class="progress shadow-sm mb-2" role="progressbar" aria-label="HP da API">
+                    <div class="progress-bar bg-danger" id="hud-api-hp" style="width: 100%"></div>
+                  </div>
+                  <div>
+                    <span class="badge bg-secondary-subtle text-secondary small">
+                      <i class="bi bi-cpu me-1"></i>Processando
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Card Central da Pergunta -->
+        <div class="card card-battle border-0 shadow-lg bg-body p-4 mb-4" id="quiz-card">
+          <div id="question-card-body">
+            <!-- Conteúdo injetado dinamicamente via JS -->
+          </div>
+        </div>
+
+        <!-- Grid de Alternativas (4 Opções) -->
+        <div class="row row-cols-1 row-cols-md-2 g-3 mb-4" id="quiz-options">
+          <!-- Botões injetados dinamicamente via JS -->
+        </div>
+
+        <!-- Banner de Feedback do Confronto -->
+        <div id="round-feedback-box" class="d-none">
+          <!-- Alerta e botão Próximo injetados dinamicamente via JS -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------------
+         VISÃO 3: FIM DE JOGO (VITÓRIA / DERROTA)
+         -------------------------------------------------------------------- -->
+    <section id="view-gameover" class="row justify-content-center d-none">
+      <div class="col-12 col-md-10 col-lg-8">
+        
+        <div class="card card-battle shadow-lg border-0 bg-body p-4 p-md-5 text-center">
+          
+          <div id="gameover-icon" class="mb-3">
+            <i class="bi bi-trophy-fill text-warning display-1"></i>
+          </div>
+
+          <h2 class="display-6 fw-bold text-body-emphasis mb-2" id="gameover-title">
+            Vitória! Você Derrotou a A.P.I.!
+          </h2>
+
+          <p class="lead text-body-secondary mb-4" id="gameover-desc">
+            Sua precisão superou o poder computacional do Boss da API!
+          </p>
+
+          <div class="d-inline-block mb-4 d-none" id="gameover-record-badge">
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fs-6 shadow-sm">
+              <i class="bi bi-star-fill me-1"></i> Novo Recorde no Ranking!
+            </span>
+          </div>
+
+          <!-- Grade de Estatísticas da Partida -->
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4">
+              <div class="p-3 rounded-4 bg-body-tertiary border">
+                <div class="text-body-secondary small mb-1">Pontuação Final</div>
+                <div class="fs-3 fw-bold text-primary" id="gameover-score">0</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-4">
+              <div class="p-3 rounded-4 bg-body-tertiary border">
+                <div class="text-body-secondary small mb-1">Precisão</div>
+                <div class="fs-3 fw-bold text-success" id="gameover-accuracy">0%</div>
+              </div>
+            </div>
+            <div class="col-12 col-md-4">
+              <div class="p-3 rounded-4 bg-body-tertiary border">
+                <div class="text-body-secondary small mb-1">Maior Combo</div>
+                <div class="fs-3 fw-bold text-warning" id="gameover-streak">0x</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ações -->
+          <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+            <button class="btn btn-primary btn-lg px-4 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 shadow" id="btn-play-again">
+              <i class="bi bi-arrow-repeat fs-4"></i> Jogar Novamente
+            </button>
+            <button class="btn btn-outline-secondary btn-lg px-4 py-3 fw-semibold d-flex align-items-center justify-content-center gap-2" id="btn-back-lobby">
+              <i class="bi bi-house-door fs-4"></i> Voltar ao Menu
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
   </main>
+
+  <!-- ======================================================================
+       RODAPÉ
+       ====================================================================== -->
+  <footer class="py-3 border-top border-body-secondary bg-body text-center text-body-secondary small">
+    <div class="container-lg d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+      <div>TriviaTech &copy; 2026 • Minigame Educacional</div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Bootstrap 5.3</span>
+        <span class="badge bg-secondary-subtle text-secondary-emphasis">Axios & Vite</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ======================================================================
+       MODAL DE REGRAS
+       ====================================================================== -->
+  <div class="modal fade" id="modalRegras" tabindex="-1" aria-labelledby="modalRegrasLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-bottom border-body-secondary">
+          <h5 class="modal-title fw-bold d-flex align-items-center text-primary" id="modalRegrasLabel">
+            <i class="bi bi-controller me-2 fs-4"></i> Como Funciona o TriviaTech
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="row g-4">
+            <div class="col-12 col-md-6">
+              <div class="d-flex gap-3">
+                <i class="bi bi-heart-pulse-fill text-danger fs-2 flex-shrink-0"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">Duelo com Barras de HP</h6>
+                  <p class="text-body-secondary small mb-0">
+                    Você e a A.P.I. possuem 100 de vida (HP). Acertos causam dano ao sistema; erros resultam em contra-ataque imediato.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="d-flex gap-3">
+                <i class="bi bi-fire text-warning fs-2 flex-shrink-0"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">Combos Multiplicadores</h6>
+                  <p class="text-body-secondary small mb-0">
+                    Acertos consecutivos ativam sequências de combo (1.25x até 2.0x), aumentando sua pontuação e o dano infligido à API.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="d-flex gap-3">
+                <i class="bi bi-stopwatch text-info fs-2 flex-shrink-0"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">Velocidade Vale Pontos</h6>
+                  <p class="text-body-secondary small mb-0">
+                    Responder rapidamente concede bônus adicional de velocidade na pontuação de cada rodada.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="d-flex gap-3">
+                <i class="bi bi-cloud-arrow-down-fill text-primary fs-2 flex-shrink-0"></i>
+                <div>
+                  <h6 class="fw-bold mb-1">Fonte de Dados Real</h6>
+                  <p class="text-body-secondary small mb-0">
+                    As perguntas são geradas dinamicamente com informações geográficas reais consultadas via API REST e filtradas no cliente.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-top border-body-secondary">
+          <button type="button" class="btn btn-primary fw-semibold px-4" data-bs-dismiss="modal">Entendido!</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       OFFCANVAS DE RANKING / RECORDES
+       ====================================================================== -->
+  <div class="offcanvas offcanvas-end rounded-start-4 border-0 shadow-lg" tabindex="-1" id="offcanvasRanking" aria-labelledby="offcanvasRankingLabel">
+    <div class="offcanvas-header border-bottom border-body-secondary">
+      <h5 class="offcanvas-title fw-bold text-body-emphasis d-flex align-items-center" id="offcanvasRankingLabel">
+        <i class="bi bi-trophy-fill text-warning me-2"></i> Hall dos Recordes
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-body-secondary small">Top 10 Melhores Desempenhos</span>
+        <button class="btn btn-outline-danger btn-sm" id="btn-clear-ranking" title="Limpar histórico local">
+          <i class="bi bi-trash3 me-1"></i> Limpar
+        </button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light table-dark-subtle small">
+            <tr>
+              <th scope="col" class="text-center">#</th>
+              <th scope="col">Jogador</th>
+              <th scope="col" class="text-end">Pts</th>
+              <th scope="col" class="text-center">Status</th>
+              <th scope="col" class="text-end">Data</th>
+            </tr>
+          </thead>
+          <tbody id="ranking-table-body">
+            <!-- Linhas geradas dinamicamente via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="ranking-empty-notice" class="text-center py-5 text-body-secondary d-none">
+        <i class="bi bi-clipboard-x fs-1 mb-2 d-block text-muted"></i>
+        <h6>Nenhum recorde registrado ainda</h6>
+        <p class="small">Inicie uma partida e derrote a A.P.I. para inaugurar o ranking local!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT PRINCIPAL VIA VITE -->
   <script type="module" src="script.js"></script>
 </body>
 </html>

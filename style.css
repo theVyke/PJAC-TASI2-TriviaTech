@@ -1,68 +1,135 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* ==========================================================================
+   TriviaTech - Estilos Customizados & Refinamentos Visuais
+   Complemento ao Bootstrap 5 e Bootstrap Icons
+   ========================================================================== */
+
+/* Transições suaves para alternância de tema e componentes */
+:root {
+  --tt-transition-speed: 0.25s;
 }
 
 body {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
+  transition: background-color var(--tt-transition-speed) ease, color var(--tt-transition-speed) ease;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Transição de entrada suave para as visões */
+.fade-in {
+  animation: ttFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes ttFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Customizações dos Cards de Batalha */
+.card-battle {
+  border-radius: 1rem;
+  transition: transform var(--tt-transition-speed) ease, box-shadow var(--tt-transition-speed) ease;
+}
+
+/* Barras de HP com transição suave */
+.progress {
+  height: 1.25rem;
+  border-radius: 0.6rem;
+  background-color: rgba(128, 128, 128, 0.15);
+  overflow: hidden;
+}
+
+.progress-bar {
+  transition: width 0.4s ease-in-out, background-color 0.3s ease;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+/* Botões de Alternativa */
+.option-btn {
+  border-radius: 0.75rem;
+  border-width: 2px;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  min-height: 4rem;
+}
+
+.option-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.option-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.option-letter {
+  transition: all 0.2s ease;
+}
+
+.option-btn:hover:not(:disabled) .option-letter {
+  transform: scale(1.1);
+}
+
+/* Destaque de acerto e erro com animação */
+.correct-highlight {
+  animation: pulseCorrect 0.45s ease;
+}
+
+.wrong-highlight {
+  animation: shakeWrong 0.45s ease;
+}
+
+@keyframes pulseCorrect {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@keyframes shakeWrong {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+/* Badge de Boss da API */
+.boss-avatar-wrapper {
+  width: 64px;
+  height: 64px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f2f2f2;
-  font-family: Arial, Helvetica, sans-serif;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.05) 70%);
 }
 
-.card {
-  width: 100%;
-  max-width: 420px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 32px 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.card__label {
-  color: #000000;
-  font-size: 0.85rem;
-  font-weight: bold;
-  letter-spacing: 0.05em;
-  margin-bottom: 12px;
-}
-
-.card__question {
-  font-size: 1.25rem;
-  margin-bottom: 24px;
-}
-
-.card__options {
+.player-avatar-wrapper {
+  width: 64px;
+  height: 64px;
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(13, 110, 253, 0.2) 0%, rgba(13, 110, 253, 0.05) 70%);
 }
 
-.option {
-  padding: 12px;
-  border: 2px solid #000000;
-  border-radius: 8px;
-  background-color: transparent;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.option:hover {
-  background-color: #d3d4d5;
-}
-
-.option.correct {
-  background-color: #2ecc71;
-  border-color: #2ecc71;
-  color: #ffffff;
-}
-
-.option.wrong {
-  background-color: #e74c3c;
-  border-color: #e74c3c;
-  color: #ffffff;
+/* Ajustes para telas móveis */
+@media (max-width: 575.98px) {
+  .card-battle {
+    border-radius: 0.75rem;
+  }
+  .option-btn {
+    min-height: 3.5rem;
+    font-size: 0.95rem;
+  }
+  .hud-avatar {
+    width: 44px;
+    height: 44px;
+  }
 }
