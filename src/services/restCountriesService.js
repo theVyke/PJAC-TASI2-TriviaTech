@@ -1,7 +1,8 @@
 import axios from "axios";
+import { translateCapitalPt } from "./ptTranslations.js";
 
 const KEY_RESTCOUNTRIES = import.meta.env.VITE_API_KEY_RESTCOUNTRIES;
-const CACHE_KEY = "triviatech_rc_v5_pool_v1";
+const CACHE_KEY = "triviatech_rc_v5_pool_v2";
 const PAGE_LIMIT = 100;
 const PAGE_OFFSETS = [0, 100, 200];
 const MIN_VALID_POOL_SIZE = 10;
@@ -299,7 +300,7 @@ export function normalizeCountry(raw) {
     raw?.capitals?.find(c => c?.attributes?.primary && c?.name) ||
     raw?.capitals?.find(c => c?.name);
 
-  const capital = primaryCapitalObj?.name || null;
+  const capital = primaryCapitalObj?.name ? translateCapitalPt(primaryCapitalObj.name) : null;
 
   return {
     code: raw?.codes?.alpha_3 || raw?.codes?.alpha_2 || `rc-${namePt}`,
