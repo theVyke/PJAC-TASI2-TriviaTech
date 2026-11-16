@@ -1,8 +1,18 @@
 import axios from "axios";
-import { translateCapitalPt } from "./ptTranslations.js";
+import {
+  translateCapitalPt,
+  translateRegionPt,
+  translateSubregionPt,
+  translateCurrencyPt,
+  translateLanguagePt
+} from "./ptTranslations.js";
+import {
+  generateDynamicQuestion,
+  resetCategoryHistory
+} from "./questionGenerators.js";
 
 const KEY_RESTCOUNTRIES = import.meta.env.VITE_API_KEY_RESTCOUNTRIES;
-const CACHE_KEY = "triviatech_rc_v5_pool_v2";
+const CACHE_KEY = "triviatech_rc_v5_pool_v3";
 const PAGE_LIMIT = 100;
 const PAGE_OFFSETS = [0, 100, 200];
 const MIN_VALID_POOL_SIZE = 10;
@@ -62,7 +72,9 @@ function createFallbackCountry({
     officialNamePt: officialNamePt || namePt,
     capital,
     region,
+    regionPt: translateRegionPt(region),
     subregion,
+    subregionPt: translateSubregionPt(subregion),
     population,
     areaKm2,
     flag: {
@@ -72,8 +84,18 @@ function createFallbackCountry({
       dominantColor,
       description: ""
     },
-    currencies: [currency],
-    languages: [language],
+    currencies: [
+      {
+        ...currency,
+        namePt: translateCurrencyPt(currency.code, currency.name)
+      }
+    ],
+    languages: [
+      {
+        ...language,
+        namePt: translateLanguagePt(language.code, language.name)
+      }
+    ],
     borders,
     landlocked,
     memberships: { un: true, ...memberships },
@@ -271,18 +293,6 @@ const FALLBACK_COUNTRIES = [
 ];
 
 /**
- * Embaralha uma cópia do array usando Fisher-Yates.
- */
-function shuffleArray(items) {
-  const arr = [...items];
-  for (let i = arr.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-/**
  * Converte um registro bruto da REST Countries v5 para o contrato NormalizedCountry.
  */
 export function normalizeCountry(raw) {
@@ -301,6 +311,8 @@ export function normalizeCountry(raw) {
     raw?.capitals?.find(c => c?.name);
 
   const capital = primaryCapitalObj?.name ? translateCapitalPt(primaryCapitalObj.name) : null;
+  const region = raw?.region || "Global";
+  const subregion = raw?.subregion || "Global";
 
   return {
     code: raw?.codes?.alpha_3 || raw?.codes?.alpha_2 || `rc-${namePt}`,
@@ -308,8 +320,10 @@ export function normalizeCountry(raw) {
     namePt,
     officialNamePt,
     capital,
-    region: raw?.region || "Global",
-    subregion: raw?.subregion || "Global",
+    region,
+    regionPt: translateRegionPt(region),
+    subregion,
+    subregionPt: translateSubregionPt(subregion),
     population: Number(raw?.population) || 0,
     areaKm2: Number(raw?.area?.kilometers) || 0,
     flag: {
@@ -322,16 +336,25 @@ export function normalizeCountry(raw) {
     currencies: Array.isArray(raw?.currencies)
       ? raw.currencies
           .filter(c => c?.name)
-          .map(c => ({ code: c.code || "", name: c.name, symbol: c.symbol || "" }))
+          .map(c => ({
+            code: c.code || "",
+            name: c.name,
+            namePt: translateCurrencyPt(c.code, c.name),
+            symbol: c.symbol || ""
+          }))
       : [],
     languages: Array.isArray(raw?.languages)
       ? raw.languages
           .filter(l => l?.name)
-          .map(l => ({
-            code: l.iso639_1 || l.iso639_3 || "",
-            name: l.name,
-            nativeName: l.native_name || l.name
-          }))
+          .map(l => {
+            const code = l.iso639_1 || l.iso639_3 || "";
+            return {
+              code,
+              name: l.name,
+              namePt: translateLanguagePt(code, l.name),
+              nativeName: l.native_name || l.name
+            };
+          })
       : [],
     borders: Array.isArray(raw?.borders) ? raw.borders : [],
     landlocked: Boolean(raw?.landlocked),
@@ -425,53 +448,10 @@ async function getCountriesPool() {
   }
 }
 
-/**
- * Seleciona até 3 capitais incorretas priorizando países da mesma região.
- */
-function pickCapitalDistractors(targetCountry, pool) {
-  const sameRegion = pool.filter(
-    c => c.region === targetCountry.region && c.capital && c.capital !== targetCountry.capital
-  );
-  const otherRegions = pool.filter(
-    c => c.region !== targetCountry.region && c.capital && c.capital !== targetCountry.capital
-  );
-
-  const distractors = [];
-  const seenCapitals = new Set([targetCountry.capital]);
-
-  for (const candidate of [...shuffleArray(sameRegion), ...shuffleArray(otherRegions)]) {
-    if (distractors.length >= 3) break;
-    if (!seenCapitals.has(candidate.capital)) {
-      seenCapitals.add(candidate.capital);
-      distractors.push(candidate.capital);
-    }
-  }
-
-  return distractors;
-}
-
-/**
- * Constrói uma pergunta padrão de capital a partir de um país elegível.
- */
-function buildCapitalQuestion(targetCountry, pool, isFallback) {
-  const distractors = pickCapitalDistractors(targetCountry, pool);
-  const options = shuffleArray([targetCountry.capital, ...distractors]);
-
-  return {
-    id: `rc-${targetCountry.code}-${Date.now()}`,
-    countryCode: targetCountry.code,
-    category: isFallback ? "Geografia & Nações (Modo Offline)" : "Geografia & Capitais Mundiais",
-    sourceApi: isFallback ? "RestCountries (Fallback Local)" : "RestCountries V5",
-    question: `Qual é a capital de ${targetCountry.namePt}?`,
-    options,
-    correctAnswer: targetCountry.capital,
-    countryMeta: targetCountry
-  };
-}
-
 export const restCountriesService = {
   resetMatchHistory() {
     usedInCurrentMatch.clear();
+    resetCategoryHistory();
   },
 
   async getCountries() {
@@ -492,6 +472,6 @@ export const restCountriesService = {
     const targetCountry = eligible[Math.floor(Math.random() * eligible.length)];
     usedInCurrentMatch.add(targetCountry.code);
 
-    return buildCapitalQuestion(targetCountry, countries, isFallback);
+    return generateDynamicQuestion(targetCountry, countries, isFallback, options);
   }
 };

@@ -127,19 +127,42 @@ export const uiManager = {
     if (feedbackBox) feedbackBox.classList.add("d-none");
 
     if (questionCard) {
+      const categoryIcon = question.categoryIcon || "bi-globe2";
+      const hasFlagMedia = question.media?.type === "flag" && question.media?.url;
+
       questionCard.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
           <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-3 py-2 rounded-pill">
-            <i class="bi bi-globe2 me-1"></i>${question.category}
+            <i class="bi ${categoryIcon} me-1"></i>${question.category}
           </span>
           <span class="badge bg-secondary-subtle text-secondary-emphasis px-2 py-1 rounded-pill small">
             <i class="bi bi-cloud-arrow-down me-1"></i>${question.sourceApi}
           </span>
         </div>
+        ${hasFlagMedia ? `
+          <div class="quiz-flag-wrapper text-center my-2" id="quiz-flag-wrapper">
+            <img
+              src="${question.media.url}"
+              alt="${question.media.alt || "Bandeira nacional"}"
+              class="quiz-flag-img rounded-3 shadow-sm border"
+              id="quiz-flag-img"
+            />
+          </div>
+        ` : ""}
         <h2 class="card-title fw-bold text-center py-3 fs-3 mb-0" id="quiz-question-title">
           ${question.question}
         </h2>
       `;
+
+      if (hasFlagMedia) {
+        const flagImg = document.getElementById("quiz-flag-img");
+        const flagWrapper = document.getElementById("quiz-flag-wrapper");
+        if (flagImg && flagWrapper) {
+          flagImg.addEventListener("error", () => {
+            flagWrapper.innerHTML = `<span class="quiz-flag-emoji" aria-label="Bandeira">${question.media.emoji || "🏳️"}</span>`;
+          });
+        }
+      }
     }
 
     if (optionsContainer) {
