@@ -69,6 +69,7 @@ function iniciarNovaPartida({ playerName, rounds, timerSeconds }) {
     timerSeconds
   });
 
+  apiAdapter.resetMatch(gameState.provider);
   uiManager.showView("arena");
   uiManager.updateHud(gameState);
   carregarProximaPergunta();
@@ -79,7 +80,12 @@ async function carregarProximaPergunta() {
   uiManager.showQuestionLoading();
 
   try {
-    const question = await apiAdapter.fetchNextQuestion(gameState.provider);
+    const question = await apiAdapter.fetchNextQuestion(gameState.provider, {
+      excludeCodes: gameState.usedCountryCodes
+    });
+    if (question?.countryCode && !gameState.usedCountryCodes.includes(question.countryCode)) {
+      gameState.usedCountryCodes.push(question.countryCode);
+    }
     gameState.currentQuestion = question;
     gameState.status = "question";
 

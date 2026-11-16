@@ -5,9 +5,14 @@ const providers = {
 };
 
 export const apiAdapter = {
-  async fetchNextQuestion(providerName = "restcountries") {
+  async fetchNextQuestion(providerName = "restcountries", options = {}) {
     const provider = providers[providerName] || providers.restcountries;
-    return await provider.getQuestion();
+    return await provider.getQuestion(options);
+  },
+
+  resetMatch(providerName = "restcountries") {
+    const provider = providers[providerName] || providers.restcountries;
+    provider.resetMatchHistory?.();
   },
 
   getAvailableProviders() {

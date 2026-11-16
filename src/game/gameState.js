@@ -15,6 +15,7 @@ export const gameState = {
   timerSeconds: 15,
   currentTimer: 15,
   currentQuestion: null,
+  usedCountryCodes: [],
   status: "idle", // 'idle' | 'loading' | 'question' | 'evaluating' | 'gameover'
   timerInterval: null,
 
@@ -35,6 +36,7 @@ export const gameState = {
     this.timerSeconds = options.timerSeconds || 15;
     this.currentTimer = this.timerSeconds;
     this.currentQuestion = null;
+    this.usedCountryCodes = [];
     this.status = "idle";
     this.clearTimer();
   },
