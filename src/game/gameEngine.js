@@ -30,21 +30,22 @@ export const gameEngine = {
       }
 
       const multiplier = this.getStreakMultiplier(gameState.streak);
-      
+      const difficultyMultiplier = gameState.difficulty === "hardcore" ? 1.3 : 1.0;
+
       // Bônus de velocidade proporcional ao tempo restante (se houver cronômetro ativado)
       const timeBonusRatio = gameState.timerSeconds > 0 ? (gameState.currentTimer / gameState.timerSeconds) : 0.5;
       const timeBonus = Math.round(50 * timeBonusRatio);
-      
-      pointsGained = Math.round(100 * multiplier) + timeBonus;
+
+      pointsGained = Math.round((Math.round(100 * multiplier) + timeBonus) * difficultyMultiplier);
       gameState.score += pointsGained;
 
-      // Dano à API: 25 base + bônus de combo
+      // Dano à API: 20 base + bônus de combo
       damageDealt = Math.min(gameState.apiHp, Math.round(20 * multiplier));
       gameState.apiHp = Math.max(0, gameState.apiHp - damageDealt);
     } else {
       // Errou: zera o streak e a API contra-ataca
       gameState.streak = 0;
-      damageReceived = 25;
+      damageReceived = gameState.difficulty === "hardcore" ? 35 : 25;
       gameState.playerHp = Math.max(0, gameState.playerHp - damageReceived);
     }
 

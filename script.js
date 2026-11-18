@@ -44,7 +44,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 3. Configura formulário do Lobby
+  // 3. Configura formulário do Lobby e preview do Boss
+  const selectBossMode = document.getElementById("select-boss-mode");
+  if (selectBossMode) {
+    uiManager.updateLobbyBossPreview(selectBossMode.value);
+    selectBossMode.addEventListener("change", (e) => {
+      uiManager.updateLobbyBossPreview(e.target.value);
+    });
+  }
+
   const formLobby = document.getElementById("form-lobby");
   if (formLobby) {
     formLobby.addEventListener("submit", (e) => {
@@ -52,8 +60,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const playerName = document.getElementById("input-player-name")?.value || "Desafiante";
       const rounds = parseInt(document.getElementById("select-rounds")?.value || "10", 10);
       const timer = parseInt(document.getElementById("select-timer")?.value || "15", 10);
+      const bossMode = document.getElementById("select-boss-mode")?.value || "mix";
+      const region = document.getElementById("select-region")?.value || "ALL";
+      const difficulty = document.getElementById("select-difficulty")?.value || "normal";
 
-      iniciarNovaPartida({ playerName, rounds, timerSeconds: timer });
+      iniciarNovaPartida({ playerName, rounds, timerSeconds: timer, bossMode, region, difficulty });
     });
   }
 });
@@ -62,11 +73,14 @@ document.addEventListener("DOMContentLoaded", () => {
 // FLUXO DO MINIGAME
 // ============================================================================
 
-function iniciarNovaPartida({ playerName, rounds, timerSeconds }) {
+function iniciarNovaPartida({ playerName, rounds, timerSeconds, bossMode, region, difficulty }) {
   gameState.reset({
     playerName,
     maxRounds: rounds,
-    timerSeconds
+    timerSeconds,
+    bossMode,
+    region,
+    difficulty
   });
 
   apiAdapter.resetMatch(gameState.provider);
@@ -81,7 +95,10 @@ async function carregarProximaPergunta() {
 
   try {
     const question = await apiAdapter.fetchNextQuestion(gameState.provider, {
-      excludeCodes: gameState.usedCountryCodes
+      excludeCodes: gameState.usedCountryCodes,
+      bossMode: gameState.bossMode,
+      region: gameState.region,
+      difficulty: gameState.difficulty
     });
     if (question?.countryCode && !gameState.usedCountryCodes.includes(question.countryCode)) {
       gameState.usedCountryCodes.push(question.countryCode);
@@ -181,7 +198,10 @@ function encerrarPartida(gameOverResult) {
       iniciarNovaPartida({
         playerName: gameState.playerName,
         rounds: gameState.maxRounds,
-        timerSeconds: gameState.timerSeconds
+        timerSeconds: gameState.timerSeconds,
+        bossMode: gameState.bossMode,
+        region: gameState.region,
+        difficulty: gameState.difficulty
       });
     },
     // Callback: Voltar ao Menu

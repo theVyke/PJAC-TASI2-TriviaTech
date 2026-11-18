@@ -7,6 +7,7 @@ import {
   translateLanguagePt
 } from "./ptTranslations.js";
 import {
+  BOSS_MODES,
   generateDynamicQuestion,
   resetCategoryHistory
 } from "./questionGenerators.js";
@@ -460,18 +461,50 @@ export const restCountriesService = {
   },
 
   async getQuestion(options = {}) {
-    const { countries, isFallback } = await getCountriesPool();
-    const excludeSet = new Set([...usedInCurrentMatch, ...(options.excludeCodes || [])]);
+    const {
+      excludeCodes = [],
+      region = "ALL",
+      difficulty = "normal",
+      bossMode = "mix"
+    } = options;
 
-    let eligible = countries.filter(c => c.capital && !excludeSet.has(c.code));
+    const { countries, isFallback } = await getCountriesPool();
+    const excludeSet = new Set([...usedInCurrentMatch, ...excludeCodes]);
+
+    let regionPool = countries;
+    if (region && region !== "ALL") {
+      const filteredByRegion = countries.filter(c => c.region === region);
+      if (filteredByRegion.length > 0) {
+        regionPool = filteredByRegion;
+      }
+    }
+
+    const distractorPool = regionPool.length >= 4 ? regionPool : countries;
+
+    let difficultyPool = regionPool;
+    if (difficulty === "normal") {
+      const normalFiltered = regionPool.filter(c => c.isUnMember && c.population >= 1000000);
+      if (normalFiltered.length >= 4) {
+        difficultyPool = normalFiltered;
+      }
+    }
+
+    let eligible = difficultyPool.filter(c => c.capital && !excludeSet.has(c.code));
     if (eligible.length === 0) {
       usedInCurrentMatch.clear();
-      eligible = countries.filter(c => Boolean(c.capital));
+      eligible = difficultyPool.filter(c => Boolean(c.capital));
+      if (eligible.length === 0) {
+        eligible = countries.filter(c => Boolean(c.capital));
+      }
     }
 
     const targetCountry = eligible[Math.floor(Math.random() * eligible.length)];
     usedInCurrentMatch.add(targetCountry.code);
 
-    return generateDynamicQuestion(targetCountry, countries, isFallback, options);
+    const allowedCategories = BOSS_MODES[bossMode]?.allowedCategories;
+    return generateDynamicQuestion(targetCountry, distractorPool, isFallback, {
+      allowedCategories,
+      difficulty
+    });
   }
 };

@@ -1,6 +1,9 @@
 export const gameState = {
   playerName: "Desafiante",
   provider: "restcountries",
+  bossMode: "mix",
+  region: "ALL",
+  difficulty: "normal",
   playerHp: 100,
   maxPlayerHp: 100,
   apiHp: 100,
@@ -22,6 +25,9 @@ export const gameState = {
   reset(options = {}) {
     this.playerName = (options.playerName || "Desafiante").trim().slice(0, 15) || "Desafiante";
     this.provider = options.provider || "restcountries";
+    this.bossMode = options.bossMode || "mix";
+    this.region = options.region || "ALL";
+    this.difficulty = options.difficulty || "normal";
     this.playerHp = 100;
     this.maxPlayerHp = 100;
     this.apiHp = 100;

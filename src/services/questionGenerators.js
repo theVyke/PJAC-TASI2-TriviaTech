@@ -1,5 +1,36 @@
 import { MEMBERSHIP_LABELS_PT } from "./ptTranslations.js";
 
+export const BOSS_MODES = {
+  mix: {
+    id: "mix",
+    name: "Geocore Omni",
+    icon: "bi-robot",
+    specialty: "Domínio Completo (Todas as 7 Categorias)",
+    allowedCategories: ["capital", "flag", "comparison", "currency", "geography", "membership", "language"]
+  },
+  flags: {
+    id: "flags",
+    name: "Geocore Vexilla",
+    icon: "bi-flag-fill",
+    specialty: "Reconhecimento Visual de Bandeiras Nacionais",
+    allowedCategories: ["flag"]
+  },
+  geopolitics: {
+    id: "geopolitics",
+    name: "Geocore Atlas",
+    icon: "bi-globe-americas",
+    specialty: "Capitais, Fronteiras, Sub-regiões e Blocos",
+    allowedCategories: ["capital", "geography", "membership"]
+  },
+  stats: {
+    id: "stats",
+    name: "Geocore Econ & Data",
+    icon: "bi-bar-chart-line-fill",
+    specialty: "População, Território, Moedas e Idiomas",
+    allowedCategories: ["comparison", "currency", "language"]
+  }
+};
+
 let lastCategoryUsed = null;
 
 /**
@@ -36,15 +67,32 @@ function buildQuestionBase(targetCountry, { type, category, categoryIcon, isFall
 
 /**
  * Seleciona até `count` valores distintos extraídos de outros países do pool,
- * priorizando países da mesma região.
+ * priorizando mesma sub-região no modo hardcore e mesma região no modo normal.
  */
-function pickDistinctValues(targetCountry, pool, extractValue, excludeValues = [], count = 3) {
+function pickDistinctValues(targetCountry, pool, extractValue, excludeValues = [], count = 3, difficulty = "normal") {
   const seen = new Set(excludeValues.filter(Boolean));
-  const sameRegion = pool.filter(c => c.code !== targetCountry.code && c.region === targetCountry.region);
-  const otherRegions = pool.filter(c => c.code !== targetCountry.code && c.region !== targetCountry.region);
+  const others = pool.filter(c => c.code !== targetCountry.code);
+
+  let orderedCandidates;
+  if (difficulty === "hardcore") {
+    const sameSubregion = others.filter(c => c.subregion && c.subregion === targetCountry.subregion);
+    const sameRegionDiffSub = others.filter(
+      c => c.region === targetCountry.region && c.subregion !== targetCountry.subregion
+    );
+    const otherRegions = others.filter(c => c.region !== targetCountry.region);
+    orderedCandidates = [
+      ...shuffleArray(sameSubregion),
+      ...shuffleArray(sameRegionDiffSub),
+      ...shuffleArray(otherRegions)
+    ];
+  } else {
+    const sameRegion = others.filter(c => c.region === targetCountry.region);
+    const otherRegions = others.filter(c => c.region !== targetCountry.region);
+    orderedCandidates = [...shuffleArray(sameRegion), ...shuffleArray(otherRegions)];
+  }
 
   const picked = [];
-  for (const candidate of [...shuffleArray(sameRegion), ...shuffleArray(otherRegions)]) {
+  for (const candidate of orderedCandidates) {
     if (picked.length >= count) break;
     const value = extractValue(candidate);
     if (value && !seen.has(value)) {
@@ -58,14 +106,15 @@ function pickDistinctValues(targetCountry, pool, extractValue, excludeValues = [
 /**
  * 1. Capitais Mundiais
  */
-function buildCapitalQuestion(targetCountry, pool, isFallback) {
+function buildCapitalQuestion(targetCountry, pool, isFallback, difficulty = "normal") {
   if (!targetCountry.capital) return null;
   const distractors = pickDistinctValues(
     targetCountry,
     pool,
     c => c.capital,
     [targetCountry.capital],
-    3
+    3,
+    difficulty
   );
   if (distractors.length < 3) return null;
 
@@ -83,7 +132,7 @@ function buildCapitalQuestion(targetCountry, pool, isFallback) {
 /**
  * 2. Desafio Visual de Bandeiras
  */
-function buildFlagQuestion(targetCountry, pool, isFallback) {
+function buildFlagQuestion(targetCountry, pool, isFallback, difficulty = "normal") {
   const flagUrl = targetCountry.flag?.svg || targetCountry.flag?.png;
   if (!flagUrl) return null;
 
@@ -92,7 +141,8 @@ function buildFlagQuestion(targetCountry, pool, isFallback) {
     pool,
     c => c.namePt,
     [targetCountry.namePt],
-    3
+    3,
+    difficulty
   );
   if (distractors.length < 3) return null;
 
@@ -116,12 +166,13 @@ function buildFlagQuestion(targetCountry, pool, isFallback) {
 /**
  * 3. Comparação de População ou Área Territorial
  */
-function buildComparisonQuestion(targetCountry, pool, isFallback) {
+function buildComparisonQuestion(targetCountry, pool, isFallback, difficulty = "normal") {
   const usePopulation = Math.random() < 0.5;
   const metricKey = usePopulation ? "population" : "areaKm2";
   const targetValue = targetCountry[metricKey];
   if (!targetValue || targetValue <= 0) return null;
 
+  const minRatioDiff = difficulty === "hardcore" ? 0.08 : 0.2;
   const candidates = shuffleArray(pool.filter(c => c.code !== targetCountry.code && c[metricKey] > 0));
   const selected = [targetCountry];
 
@@ -129,7 +180,7 @@ function buildComparisonQuestion(targetCountry, pool, isFallback) {
     if (selected.length >= 4) break;
     const isFarEnough = selected.every(chosen => {
       const maxVal = Math.max(chosen[metricKey], candidate[metricKey]);
-      return Math.abs(chosen[metricKey] - candidate[metricKey]) / maxVal >= 0.2;
+      return Math.abs(chosen[metricKey] - candidate[metricKey]) / maxVal >= minRatioDiff;
     });
     if (isFarEnough) {
       selected.push(candidate);
@@ -156,7 +207,7 @@ function buildComparisonQuestion(targetCountry, pool, isFallback) {
 /**
  * 4. Economia & Moedas
  */
-function buildCurrencyQuestion(targetCountry, pool, isFallback) {
+function buildCurrencyQuestion(targetCountry, pool, isFallback, difficulty = "normal") {
   const mainCurrency = targetCountry.currencies?.[0];
   if (!mainCurrency?.namePt || !mainCurrency?.code) return null;
 
@@ -168,7 +219,8 @@ function buildCurrencyQuestion(targetCountry, pool, isFallback) {
     pool,
     c => (c.currencies?.[0]?.code && c.currencies?.[0]?.namePt ? formatCurrency(c.currencies[0]) : null),
     [correctLabel],
-    3
+    3,
+    difficulty
   );
   if (distractors.length < 3) return null;
 
@@ -186,7 +238,7 @@ function buildCurrencyQuestion(targetCountry, pool, isFallback) {
 /**
  * 5. Fronteiras Terrestres ou Sub-região Geográfica
  */
-function buildGeographyQuestion(targetCountry, pool, isFallback) {
+function buildGeographyQuestion(targetCountry, pool, isFallback, difficulty = "normal") {
   const poolByCode = new Map(pool.map(c => [c.code, c]));
   const neighbors = (targetCountry.borders || [])
     .map(code => poolByCode.get(code))
@@ -201,7 +253,8 @@ function buildGeographyQuestion(targetCountry, pool, isFallback) {
       pool.filter(c => !borderSet.has(c.code)),
       c => c.namePt,
       [chosenNeighbor.namePt],
-      3
+      3,
+      difficulty
     );
 
     if (distractors.length === 3) {
@@ -224,7 +277,8 @@ function buildGeographyQuestion(targetCountry, pool, isFallback) {
     pool,
     c => (c.subregionPt && c.subregionPt !== "Global" ? c.subregionPt : null),
     [targetCountry.subregionPt],
-    3
+    3,
+    difficulty
   );
   if (subregionDistractors.length < 3) return null;
 
@@ -242,7 +296,7 @@ function buildGeographyQuestion(targetCountry, pool, isFallback) {
 /**
  * 6. Geopolítica & Blocos Internacionais
  */
-function buildMembershipQuestion(targetCountry, pool, isFallback) {
+function buildMembershipQuestion(targetCountry, pool, isFallback, difficulty = "normal") {
   const validBlocs = Object.keys(MEMBERSHIP_LABELS_PT).filter(key => {
     if (targetCountry.memberships?.[key] !== true) return false;
     const nonMembersCount = pool.filter(c => c.code !== targetCountry.code && c.memberships?.[key] === false).length;
@@ -260,7 +314,8 @@ function buildMembershipQuestion(targetCountry, pool, isFallback) {
     nonMembers,
     c => c.namePt,
     [targetCountry.namePt],
-    3
+    3,
+    difficulty
   );
   if (distractors.length < 3) return null;
 
@@ -278,7 +333,7 @@ function buildMembershipQuestion(targetCountry, pool, isFallback) {
 /**
  * 7. Idiomas Oficiais
  */
-function buildLanguageQuestion(targetCountry, pool, isFallback) {
+function buildLanguageQuestion(targetCountry, pool, isFallback, difficulty = "normal") {
   const mainLanguage = targetCountry.languages?.[0];
   if (!mainLanguage?.namePt) return null;
 
@@ -288,7 +343,8 @@ function buildLanguageQuestion(targetCountry, pool, isFallback) {
     pool,
     c => c.languages?.[0]?.namePt,
     countryLanguageNames,
-    3
+    3,
+    difficulty
   );
   if (distractors.length < 3) return null;
 
@@ -321,6 +377,7 @@ export function resetCategoryHistory() {
  * Seleciona e constrói uma pergunta polimórfica evitando repetir a mesma categoria em sequência.
  */
 export function generateDynamicQuestion(targetCountry, pool, isFallback, options = {}) {
+  const difficulty = options.difficulty || "normal";
   const allowedCategories = Array.isArray(options.allowedCategories) && options.allowedCategories.length > 0
     ? options.allowedCategories.filter(cat => Boolean(GENERATORS[cat]))
     : Object.keys(GENERATORS);
@@ -332,12 +389,12 @@ export function generateDynamicQuestion(targetCountry, pool, isFallback, options
   ];
 
   for (const categoryKey of candidateOrder) {
-    const question = GENERATORS[categoryKey](targetCountry, pool, isFallback);
+    const question = GENERATORS[categoryKey](targetCountry, pool, isFallback, difficulty);
     if (question) {
       lastCategoryUsed = categoryKey;
       return question;
     }
   }
 
-  return buildCapitalQuestion(targetCountry, pool, isFallback);
+  return buildCapitalQuestion(targetCountry, pool, isFallback, difficulty);
 }

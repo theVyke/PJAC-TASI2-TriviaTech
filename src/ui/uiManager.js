@@ -1,6 +1,19 @@
 import { rankingStorage } from "../storage/rankingStorage.js";
+import { BOSS_MODES } from "../services/questionGenerators.js";
+import { translateRegionPt } from "../services/ptTranslations.js";
 
 export const uiManager = {
+  // Atualiza o card do Boss no Lobby conforme especialidade selecionada
+  updateLobbyBossPreview(bossMode = "mix") {
+    const boss = BOSS_MODES[bossMode] || BOSS_MODES.mix;
+    const iconEl = document.getElementById("lobby-boss-icon");
+    const titleEl = document.getElementById("lobby-boss-title");
+    const specialtyEl = document.getElementById("lobby-boss-specialty");
+
+    if (iconEl) iconEl.className = `bi ${boss.icon} fs-1 text-danger`;
+    if (titleEl) titleEl.textContent = `Boss Atual: ${boss.name}`;
+    if (specialtyEl) specialtyEl.textContent = boss.specialty;
+  },
   // Alterna visibilidade entre visões
   showView(viewName) {
     const views = ["lobby", "arena", "gameover"];
@@ -51,8 +64,22 @@ export const uiManager = {
     }
 
     // 2. A.P.I. Core
+    const boss = BOSS_MODES[state.bossMode] || BOSS_MODES.mix;
+    const bossIconEl = document.getElementById("hud-boss-icon");
+    const bossNameEl = document.getElementById("hud-boss-name");
+    const bossMetaEl = document.getElementById("hud-boss-meta");
     const apiHpBar = document.getElementById("hud-api-hp");
     const apiHpText = document.getElementById("hud-api-hp-text");
+
+    if (bossIconEl) bossIconEl.className = `bi ${boss.icon} text-danger fs-2`;
+    if (bossNameEl) bossNameEl.textContent = boss.name;
+    if (bossMetaEl) {
+      const regionLabel = state.region && state.region !== "ALL" ? translateRegionPt(state.region) : "Global";
+      const diffBadge = state.difficulty === "hardcore"
+        ? `<span class="badge bg-warning text-dark ms-1">Hardcore</span>`
+        : `<span class="badge bg-secondary-subtle text-secondary ms-1">Normal</span>`;
+      bossMetaEl.innerHTML = `<span class="badge bg-info-subtle text-info-emphasis border border-info-subtle small"><i class="bi bi-globe2 me-1"></i>${regionLabel}</span>${diffBadge}`;
+    }
 
     if (apiHpBar && apiHpText) {
       const pct = Math.max(0, Math.min(100, state.apiHp));

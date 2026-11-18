@@ -70,15 +70,15 @@
           <div class="card border border-danger-subtle bg-danger-subtle bg-opacity-10 p-3 mb-4 rounded-4 text-start">
             <div class="d-flex align-items-center gap-3">
               <div class="boss-avatar-wrapper flex-shrink-0">
-                <i class="bi bi-robot fs-1 text-danger"></i>
+                <i class="bi bi-robot fs-1 text-danger" id="lobby-boss-icon"></i>
               </div>
               <div class="flex-grow-1">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-1">
-                  <h5 class="fw-bold mb-0 text-danger">Boss Atual: Geocore API</h5>
+                  <h5 class="fw-bold mb-0 text-danger" id="lobby-boss-title">Boss Atual: Geocore Omni</h5>
                   <span class="badge bg-danger text-white"><i class="bi bi-broadcast me-1"></i>Online</span>
                 </div>
                 <p class="mb-0 text-body-secondary small mt-1">
-                  Fonte: <strong>Rest Countries V5</strong> • Especialidade: <em>Capitais e Geografia do Planeta</em>
+                  Fonte: <strong>Rest Countries V5</strong> • Especialidade: <em id="lobby-boss-specialty">Domínio Completo (Todas as 7 Categorias)</em>
                 </p>
               </div>
             </div>
@@ -86,7 +86,7 @@
 
           <!-- Formulário de Configurações -->
           <form id="form-lobby" class="text-start">
-            <div class="row g-3 mb-4">
+            <div class="row g-3 mb-3">
               <div class="col-12 col-md-6">
                 <label for="input-player-name" class="form-label fw-semibold">
                   <i class="bi bi-person-fill text-primary me-1"></i> Seu Apelido
@@ -113,6 +113,44 @@
                   <option value="15" selected>15s (Padrão)</option>
                   <option value="30">30s (Tranquilo)</option>
                   <option value="0">Sem Limite</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <div class="col-12 col-md-4">
+                <label for="select-boss-mode" class="form-label fw-semibold">
+                  <i class="bi bi-cpu-fill text-danger me-1"></i> Especialidade do Boss
+                </label>
+                <select class="form-select bg-body-tertiary" id="select-boss-mode">
+                  <option value="mix" selected>Geocore Omni (Todas Categorias)</option>
+                  <option value="flags">Geocore Vexilla (Só Bandeiras)</option>
+                  <option value="geopolitics">Geocore Atlas (Geopolítica &amp; Capitais)</option>
+                  <option value="stats">Geocore Econ (Dados, Moedas &amp; Idiomas)</option>
+                </select>
+              </div>
+
+              <div class="col-6 col-md-4">
+                <label for="select-region" class="form-label fw-semibold">
+                  <i class="bi bi-globe2 text-info me-1"></i> Continente / Região
+                </label>
+                <select class="form-select bg-body-tertiary" id="select-region">
+                  <option value="ALL" selected>Global (Todos os Continentes)</option>
+                  <option value="Americas">Américas</option>
+                  <option value="Europe">Europa</option>
+                  <option value="Asia">Ásia</option>
+                  <option value="Africa">África</option>
+                  <option value="Oceania">Oceania</option>
+                </select>
+              </div>
+
+              <div class="col-6 col-md-4">
+                <label for="select-difficulty" class="form-label fw-semibold">
+                  <i class="bi bi-lightning-fill text-warning me-1"></i> Dificuldade
+                </label>
+                <select class="form-select bg-body-tertiary" id="select-difficulty">
+                  <option value="normal" selected>Normal (Países ONU)</option>
+                  <option value="hardcore">Hardcore (+30% Pts / Dano 35)</option>
                 </select>
               </div>
             </div>
@@ -180,17 +218,17 @@
             <div class="col-12 col-md-5">
               <div class="d-flex align-items-center gap-3 flex-row-reverse text-end">
                 <div class="boss-avatar-wrapper hud-avatar flex-shrink-0">
-                  <i class="bi bi-robot text-danger fs-2"></i>
+                  <i class="bi bi-robot text-danger fs-2" id="hud-boss-icon"></i>
                 </div>
                 <div class="flex-grow-1">
                   <div class="d-flex justify-content-between align-items-center mb-1 flex-row-reverse">
-                    <span class="fw-bold text-danger">A.P.I. Geocore</span>
+                    <span class="fw-bold text-danger" id="hud-boss-name">Geocore Omni</span>
                     <span class="badge bg-danger-subtle text-danger fw-bold" id="hud-api-hp-text">100 HP</span>
                   </div>
                   <div class="progress shadow-sm mb-2" role="progressbar" aria-label="HP da API">
                     <div class="progress-bar bg-danger" id="hud-api-hp" style="width: 100%"></div>
                   </div>
-                  <div>
+                  <div id="hud-boss-meta">
                     <span class="badge bg-secondary-subtle text-secondary small">
                       <i class="bi bi-cpu me-1"></i>Processando
                     </span>
